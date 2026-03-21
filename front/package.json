@@ -1,22 +1,27 @@
 {
-  "name": "hak",
+  "name": "analytics-frontend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "axios": "^1.13.6",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "@faker-js/faker": "^8.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-window": "^1.8.10",
+    "react-window-infinite-loader": "^2.0.1",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.0.1",
-    "vite": "^8.0.1"
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/react-window": "^1.8.5",
+    "@types/react-window-infinite-loader": "^1.0.6",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
   }
 }
