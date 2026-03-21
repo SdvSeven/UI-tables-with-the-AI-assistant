@@ -44,7 +44,7 @@ const App: React.FC = () => {
             <VirtualTable columns={columns} height={600} />
           </div>
           {showAIPanel && (
-            <div className="ai-sidebar" style={{ width: '320px', flexShrink: 0 }}>
+            <div className="ai-sidebar" style={{ width: '350px', flexShrink: 0 }}>
               <AIPanel />
             </div>
           )}

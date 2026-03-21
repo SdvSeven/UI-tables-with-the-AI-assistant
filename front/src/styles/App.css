@@ -296,3 +296,59 @@ body {
     font-family: monospace;
     font-size: 11px;
 }
+.ai-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-input-area textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.ai-input-area button {
+  align-self: flex-end;
+  padding: 6px 12px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ai-input-area button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.ai-response {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 13px;
+  margin-top: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ai-response pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-top: 8px;
+  font-family: monospace;
+  font-size: 12px;
+}

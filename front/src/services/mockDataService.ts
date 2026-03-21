@@ -21,7 +21,7 @@ class MockDataService {
 
   private async _generateData() {
     console.log('Генерация 1 млн строк...');
-    const TOTAL = 1_000_00;
+    const TOTAL = 1_000_000;
     const CHUNK_SIZE = 50_000;
     let generated = 0;
     this.data = [];
@@ -97,7 +97,6 @@ class MockDataService {
 
     let result = [...this.data!];
 
-    // Фильтры
     if (filters) {
       Object.entries(filters).forEach(([field, value]) => {
         if (value !== undefined && value !== '') {
@@ -108,7 +107,6 @@ class MockDataService {
 
     const totalFiltered = result.length;
 
-    // Группировка и агрегация
     let aggregatedData = result;
     if (groupBy && groupBy.length > 0) {
       const groups = new Map();
@@ -130,7 +128,7 @@ class MockDataService {
       aggregatedData = Array.from(groups.values());
     }
 
-    // ========== СОРТИРОВКА ==========
+    // Сортировка
     if (sort && sort.column) {
       const { column, direction } = sort;
       aggregatedData.sort((a, b) => {
@@ -146,7 +144,6 @@ class MockDataService {
       });
     }
 
-    // Пагинация
     const paginated = aggregatedData.slice(offset, offset + limit);
 
     return {
@@ -213,6 +210,11 @@ class MockDataService {
   async getTotalRows(): Promise<number> {
     await this.initializeAsync();
     return this.totalRows;
+  }
+
+  async sendAIQuery(query: string, context: any): Promise<string> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return `(Заглушка) Ваш запрос: "${query}".\nКонтекст: фильтры = ${JSON.stringify(context.filters)}, группировка = ${JSON.stringify(context.groupBy)}.`;
   }
 }
 

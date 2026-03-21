@@ -1,15 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { debounce } from '@utils';
 import { api } from '@services';
 
 export interface QueryFilters {
   [key: string]: any;
-}
-
-export interface Aggregation {
-  column: string;
-  type: string;
-  alias: string;
 }
 
 export interface Sort {
@@ -23,49 +16,44 @@ export const useDataQuery = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<QueryFilters>({});
-  const [groupBy, setGroupBy] = useState<string[]>([]);
-  const [aggregations, setAggregations] = useState<Aggregation[]>([]);
   const [sort, setSort] = useState<Sort>({ column: null, direction: 'asc' });
+  const [pageSize] = useState(100);
 
-  const cache = useRef(new Map<string, { data: any[]; total: number }>());
-  const abortController = useRef<AbortController | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
-  const resetData = useCallback(() => {
-    setData([]);
-    setTotalRows(0);
-    cache.current.clear();
+  // Отмена последнего запроса
+  const cancelLastRequest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
   }, []);
 
-  const fetchChunk = useCallback(async (offset: number, limit: number, append: boolean = true) => {
-    const cacheKey = JSON.stringify({ filters, groupBy, aggregations, sort, offset, limit });
-    if (cache.current.has(cacheKey)) {
-      const cached = cache.current.get(cacheKey)!;
-      if (append) {
-        setData(prev => {
-          const existingIds = new Set(prev.map(item => item.id));
-          const newRows = cached.data.filter((row: any) => !existingIds.has(row.id));
-          return [...prev, ...newRows];
-        });
-      } else {
-        setData(cached.data);
-      }
-      setTotalRows(cached.total);
-      return;
-    }
+  // Функция загрузки порции данных
+  const fetchChunk = useCallback(async (offset: number, append: boolean = true) => {
+    // Отменяем предыдущий запрос, если он ещё не завершён
+    cancelLastRequest();
 
-    if (abortController.current) abortController.current.abort();
-    abortController.current = new AbortController();
+    // Создаём новый AbortController
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     setLoading(true);
     try {
-      const params = { filters, groupBy, aggregations, sort, offset, limit };
-      const result = await api.query(params);
-      cache.current.set(cacheKey, { data: result.data, total: result.total });
+      const result = await api.query({
+        offset,
+        limit: pageSize,
+        filters,
+        sort: sort.column ? { column: sort.column, direction: sort.direction } : undefined,
+      }, controller.signal); // передаём сигнал в api.query
+
+      if (!isMountedRef.current) return; // компонент размонтирован
 
       if (append) {
         setData(prev => {
           const existingIds = new Set(prev.map(item => item.id));
-          const newRows = result.data.filter((row: any) => !existingIds.has(row.id));
+          const newRows = result.data.filter(row => !existingIds.has(row.id));
           return [...prev, ...newRows];
         });
       } else {
@@ -74,76 +62,96 @@ export const useDataQuery = () => {
       setTotalRows(result.total);
       setError(null);
     } catch (err: any) {
-      if (err.name !== 'AbortError') setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, groupBy, aggregations, sort]);
-
-  // Загружаем ВСЕ строки при инициализации
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const total = await api.getTotalRows();
-        setTotalRows(total);
-        resetData();
-        // Загружаем все строки (limit = total)
-        await fetchChunk(0, total, false);
-      } catch (err) {
-        console.error('Initialization error:', err);
-        setError('Failed to initialize data');
+      if (err.name === 'AbortError') {
+        console.log('Request aborted');
+        return;
       }
-    };
-    init();
-    return () => {
-      if (abortController.current) abortController.current.abort();
-    };
-  }, [fetchChunk, resetData]);
+      if (isMountedRef.current) {
+        setError(err.message);
+        console.error('Fetch error:', err);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+      // Если это был последний запрос, очищаем контроллер
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
+    }
+  }, [filters, sort, pageSize, cancelLastRequest]);
 
+  // Инициализация
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchChunk(0, false);
+    return () => {
+      isMountedRef.current = false;
+      cancelLastRequest(); // отменяем запрос при размонтировании
+    };
+  }, []);
+
+  // При изменении фильтров или сортировки сбрасываем данные и загружаем первую страницу
+  useEffect(() => {
+    // Не вызываем fetchChunk, если это первая загрузка (этот эффект сработает при изменении)
+    // Добавим проверку на то, что инициализация уже прошла
+    setData([]);
+    fetchChunk(0, false);
+  }, [filters, sort]);
+
+  // Подгрузка следующих страниц (вызывается InfiniteLoader)
   const loadMoreRows = useCallback(async (startIndex: number, stopIndex: number) => {
-    // После полной загрузки этот метод вызываться не будет, так как hasMore = false
-    const offset = startIndex;
-    const limit = stopIndex - startIndex + 1;
-    const existingRows = data.length;
-    if (existingRows > stopIndex) return;
-    await fetchChunk(offset, limit, true);
-  }, [fetchChunk, data.length]);
+    if (data.length >= totalRows) return;
+    const nextOffset = data.length;
+    await fetchChunk(nextOffset, true);
+  }, [data.length, totalRows, fetchChunk]);
 
   const applyFilters = useCallback((newFilters: QueryFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-    resetData();
-    // После фильтрации загружаем первые 100 строк, но можно тоже загрузить все
-    fetchChunk(0, 100, false);
-  }, [fetchChunk, resetData]);
-
-  const applyGroupBy = useCallback((newGroupBy: string[]) => {
-    setGroupBy(newGroupBy);
-    resetData();
-    fetchChunk(0, 100, false);
-  }, [fetchChunk, resetData]);
-
-  const applyAggregations = useCallback((newAggregations: Aggregation[]) => {
-    setAggregations(newAggregations);
-    resetData();
-    fetchChunk(0, 100, false);
-  }, [fetchChunk, resetData]);
+    setFilters(newFilters);
+  }, []);
 
   const applySort = useCallback((column: string, direction: 'asc' | 'desc') => {
     setSort({ column, direction });
-    resetData();
-    fetchChunk(0, 100, false);
-  }, [fetchChunk, resetData]);
+  }, []);
 
   const updateRecord = useCallback(async (id: number, updates: Record<string, any>) => {
+    const oldRecord = data.find(r => r.id === id);
+    if (!oldRecord) throw new Error('Record not found');
+
+    setData(prev => prev.map(row => row.id === id ? { ...row, ...updates } : row));
+
     try {
       const updated = await api.updateRecord(id, updates);
       setData(prev => prev.map(row => row.id === id ? updated : row));
       return updated;
     } catch (err) {
-      console.error('Update error:', err);
+      setData(prev => prev.map(row => row.id === id ? oldRecord : row));
       throw err;
     }
+  }, [data]);
+
+  const createRecord = useCallback(async (record: Record<string, any>) => {
+    const newRecord = await api.createRecord(record);
+    setData(prev => [...prev, newRecord]);
+    setTotalRows(prev => prev + 1);
+    return newRecord;
   }, []);
+
+  const deleteRecord = useCallback(async (id: number) => {
+    const oldRecord = data.find(r => r.id === id);
+    if (!oldRecord) throw new Error('Record not found');
+
+    setData(prev => prev.filter(row => row.id !== id));
+    setTotalRows(prev => prev - 1);
+
+    try {
+      await api.deleteRecord(id);
+    } catch (err) {
+      setData(prev => [...prev, oldRecord].sort((a, b) => a.id - b.id));
+      setTotalRows(prev => prev + 1);
+      throw err;
+    }
+  }, [data]);
 
   const hasMore = data.length < totalRows;
 
@@ -153,16 +161,13 @@ export const useDataQuery = () => {
     loading,
     error,
     filters,
-    groupBy,
-    aggregations,
     sort,
     hasMore,
     applyFilters,
-    applyGroupBy,
-    applyAggregations,
     applySort,
     loadMoreRows,
     updateRecord,
-    clearCache: () => cache.current.clear(),
+    createRecord,
+    deleteRecord,
   };
 };
