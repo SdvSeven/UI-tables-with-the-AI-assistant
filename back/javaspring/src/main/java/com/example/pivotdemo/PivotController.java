@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
-import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -35,16 +34,21 @@ public class PivotController {
         );
     }
 
-    // ==================== GET /api/sales (с фильтрацией, сортировкой, пагинацией) ====================
+    // ==================== GET /api/sales ====================
     @GetMapping("/sales")
     public List<Map<String, Object>> getSales(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String productCategory,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String paymentMethod,
             @RequestParam(required = false) BigDecimal minRevenue,
             @RequestParam(required = false) BigDecimal maxRevenue,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) Integer quantity,
+            @RequestParam(required = false) BigDecimal price,
+            @RequestParam(required = false) BigDecimal discount,
             @RequestParam(defaultValue = "id") String sort,
             @RequestParam(defaultValue = "asc") String order,
             @RequestParam(defaultValue = "0") int offset,
@@ -68,6 +72,14 @@ public class PivotController {
             conditions.add("product_category = ?");
             params.add(productCategory);
         }
+        if (productName != null && !productName.isEmpty()) {
+            conditions.add("product_name = ?");
+            params.add(productName);
+        }
+        if (paymentMethod != null && !paymentMethod.isEmpty()) {
+            conditions.add("payment_method = ?");
+            params.add(paymentMethod);
+        }
         if (minRevenue != null) {
             conditions.add("revenue >= ?");
             params.add(minRevenue);
@@ -84,10 +96,25 @@ public class PivotController {
             conditions.add("sale_date <= ?");
             params.add(endDate);
         }
+        if (quantity != null) {
+            conditions.add("quantity = ?");
+            params.add(quantity);
+        }
+        if (price != null) {
+            conditions.add("price = ?");
+            params.add(price);
+        }
+        if (discount != null) {
+            conditions.add("discount = ?");
+            params.add(discount);
+        }
 
         String where = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
 
-        Set<String> allowedSortColumns = Set.of("id", "sale_date", "region", "product_category", "revenue", "customer_id");
+        Set<String> allowedSortColumns = Set.of(
+            "id", "sale_date", "region", "product_category", "product_name",
+            "quantity", "price", "revenue", "customer_id", "payment_method", "discount"
+        );
         if (!allowedSortColumns.contains(sort)) {
             sort = "id";
         }
@@ -118,16 +145,21 @@ public class PivotController {
         });
     }
 
-    // ==================== GET /api/sales/count (с учётом фильтров) ====================
+    // ==================== GET /api/sales/count ====================
     @GetMapping("/sales/count")
     public Map<String, Long> getSalesCount(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String productCategory,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String paymentMethod,
             @RequestParam(required = false) BigDecimal minRevenue,
             @RequestParam(required = false) BigDecimal maxRevenue,
             @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate) {
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) Integer quantity,
+            @RequestParam(required = false) BigDecimal price,
+            @RequestParam(required = false) BigDecimal discount) {
 
         List<String> conditions = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -143,6 +175,14 @@ public class PivotController {
         if (productCategory != null && !productCategory.isEmpty()) {
             conditions.add("product_category = ?");
             params.add(productCategory);
+        }
+        if (productName != null && !productName.isEmpty()) {
+            conditions.add("product_name = ?");
+            params.add(productName);
+        }
+        if (paymentMethod != null && !paymentMethod.isEmpty()) {
+            conditions.add("payment_method = ?");
+            params.add(paymentMethod);
         }
         if (minRevenue != null) {
             conditions.add("revenue >= ?");
@@ -160,6 +200,18 @@ public class PivotController {
             conditions.add("sale_date <= ?");
             params.add(endDate);
         }
+        if (quantity != null) {
+            conditions.add("quantity = ?");
+            params.add(quantity);
+        }
+        if (price != null) {
+            conditions.add("price = ?");
+            params.add(price);
+        }
+        if (discount != null) {
+            conditions.add("discount = ?");
+            params.add(discount);
+        }
 
         String where = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
         String sql = "SELECT COUNT(*) FROM sales" + where;
@@ -167,7 +219,7 @@ public class PivotController {
         return Map.of("count", count);
     }
 
-    // ==================== GET /api/sales/{id} (одна запись) ====================
+    // ==================== GET /api/sales/{id} ====================
     @GetMapping("/sales/{id}")
     public Map<String, Object> getSaleById(@PathVariable Long id) {
         return jdbcTemplate.queryForObject(
