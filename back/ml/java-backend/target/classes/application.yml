@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/data_analitic
+    username: sdv7
+    password: ""
+    driver-class-name: org.postgresql.Driver
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    ai.cheatcoders: DEBUG
