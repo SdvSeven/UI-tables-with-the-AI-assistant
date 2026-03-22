@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { InfiniteLoader } from 'react-window-infinite-loader';
 import { useDataQuery } from '@hooks';
@@ -15,30 +15,19 @@ interface VirtualTableProps {
   columns: Column[];
   height?: number;
   rowHeight?: number;
+  onCellSelect?: (rowId: number, column: string, value: string) => void;
 }
 
-const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowHeight = 32 }) => {
+const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowHeight = 32, onCellSelect }) => {
   if (!columns || !Array.isArray(columns)) return null;
 
-  const { data, hasMore, loading, sort, applySort, updateRecord, loadMoreRows } = useDataQuery();
+  const { data, hasMore, loading, sort, applySort, loadMoreRows } = useDataQuery();
 
-  const [editingCell, setEditingCell] = useState<{ rowId: number | null; column: string | null }>({ rowId: null, column: null });
-  const [editValue, setEditValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Сохраняем текущую редактируемую ячейку
-  const saveCurrentEdit = useCallback(async () => {
-    if (editingCell.rowId !== null && editingCell.column !== null) {
-      await saveEdit(editingCell.rowId, editingCell.column);
-    }
-  }, [editingCell]);
-
-  useEffect(() => {
-    if (editingCell.rowId !== null && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [editingCell]);
+  const [selectedCell, setSelectedCell] = React.useState<{
+    rowId: number | null;
+    column: string | null;
+    initialValue: string;
+  }>({ rowId: null, column: null, initialValue: '' });
 
   const formatCellValue = (value: any, type: string): string => {
     if (value === null || value === undefined) return '—';
@@ -55,11 +44,7 @@ const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowH
     return String(value);
   };
 
-  const startEditing = async (rowId: number, column: string, currentValue: any) => {
-    // Сохраняем предыдущую ячейку, если была активна
-    if (editingCell.rowId !== null && editingCell.column !== null) {
-      await saveCurrentEdit();
-    }
+  const selectCell = async (rowId: number, column: string, currentValue: any) => {
     let formula: string | null = null;
     try {
       formula = await api.getCellFormula(rowId, column);
@@ -67,49 +52,9 @@ const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowH
       console.warn('Failed to fetch formula', err);
     }
     const displayValue = formula !== null ? formula : (currentValue !== undefined ? String(currentValue) : '');
-    setEditingCell({ rowId, column });
-    setEditValue(displayValue);
-  };
-
-  const saveEdit = async (rowId: number, column: string) => {
-    const originalRow = data.find(row => row.id === rowId);
-    if (!originalRow) return;
-
-    let newValue: any = editValue;
-    const colDef = columns.find(c => c.key === column);
-    if (colDef && !editValue.startsWith('=')) {
-      if (colDef.type === 'numeric') {
-        newValue = parseFloat(editValue);
-        if (isNaN(newValue)) newValue = 0;
-      } else if (colDef.type === 'integer') {
-        newValue = parseInt(editValue);
-        if (isNaN(newValue)) newValue = 0;
-      } else if (colDef.type === 'json') {
-        try {
-          newValue = JSON.parse(editValue);
-        } catch (e) {
-          alert('Неверный формат JSON');
-          setEditingCell({ rowId: null, column: null });
-          return;
-        }
-      }
-    }
-
-    try {
-      await updateRecord(rowId, { [column]: newValue });
-    } catch (err) {
-      alert('Ошибка сохранения');
-    } finally {
-      setEditingCell({ rowId: null, column: null });
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowId: number, column: string) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      saveEdit(rowId, column);
-    } else if (e.key === 'Escape') {
-      setEditingCell({ rowId: null, column: null });
+    setSelectedCell({ rowId, column, initialValue: displayValue });
+    if (onCellSelect) {
+      onCellSelect(rowId, column, displayValue);
     }
   };
 
@@ -117,51 +62,23 @@ const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowH
     const row = data[index];
     if (!row) return null;
 
+    const isSelected = selectedCell.rowId === row.id;
     return (
       <div style={style} className="virtual-row">
         {columns.map(col => {
-          const isEditing = editingCell.rowId === row.id && editingCell.column === col.key;
           const value = row[col.key];
-
-          if (isEditing) {
-            return (
-              <div
-                key={col.key}
-                className="virtual-cell editing"
-                style={{
-                  width: col.width || 150,
-                  textAlign: col.type === 'numeric' ? 'right' : 'left',
-                }}
-              >
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(e, row.id, col.key)}
-                  style={{
-                    width: '100%',
-                    padding: '4px',
-                    border: '1px solid #1a73e8',
-                    borderRadius: '2px',
-                    fontFamily: 'inherit',
-                    fontSize: '12px'
-                  }}
-                />
-              </div>
-            );
-          }
-
+          const isSelectedCell = isSelected && selectedCell.column === col.key;
           return (
             <div
               key={col.key}
-              className="virtual-cell"
+              className={`virtual-cell ${isSelectedCell ? 'selected-cell' : ''}`}
               style={{
                 width: col.width || 150,
                 textAlign: col.type === 'numeric' ? 'right' : 'left',
+                cursor: 'pointer',
               }}
               title={formatCellValue(value, col.type)}
-              onDoubleClick={() => startEditing(row.id, col.key, value)}
+              onDoubleClick={() => selectCell(row.id, col.key, value)}
             >
               {formatCellValue(value, col.type)}
             </div>
@@ -191,6 +108,7 @@ const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowH
           </div>
         ))}
       </div>
+      {/* @ts-ignore */}
       <InfiniteLoader
         isItemLoaded={isItemLoaded}
         itemCount={itemCount}

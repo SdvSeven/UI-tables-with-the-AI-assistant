@@ -56,7 +56,7 @@ const AggregationBar: React.FC<AggregationBarProps> = ({ columns }) => {
     <div className="aggregation-bar">
       <div className="aggregation-controls">
         <button className="agg-button" onClick={() => setShowPanel(!showPanel)}>
-          
+          Агрегация и группировка
         </button>
         {selectedGroupBy.length > 0 && (
           <div className="active-groupby">
