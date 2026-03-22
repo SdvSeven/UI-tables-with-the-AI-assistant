@@ -33,10 +33,20 @@ class ApiService {
         case 'customer_id':
           result['customerId'] = String(value);
           break;
-        default:
+        // Явная обработка числовых и строковых полей, которые не требуют переименования
+        case 'quantity':
+        case 'price':
+        case 'discount':
+        case 'id':
+        case 'region':
           result[key] = String(value);
+          break;
+        default:
+          // Игнорируем неизвестные поля (например, extra_attributes)
+          console.warn(`Unknown filter field: ${key}`);
       }
     }
+    console.log('Transformed filters:', result);
     return result;
   }
 
@@ -45,7 +55,7 @@ class ApiService {
     const params = new URLSearchParams(transformed);
     const url = `${API_BASE}/sales/count?${params.toString()}`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`Ошибка получения count: ${response.status}`);
+    if (!response.ok) throw new Error(`Failed to get count: ${response.status}`);
     const data = await response.json();
     return data.count;
   }
@@ -72,9 +82,11 @@ class ApiService {
     }
 
     const url = `${API_BASE}/sales?${urlParams.toString()}`;
+    console.log('Request to backend:', url);
     const response = await fetch(url, { signal });
-    if (!response.ok) throw new Error(`Ошибка запроса: ${response.status}`);
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     const rows = await response.json();
+    console.log('Received rows:', rows.length);
 
     const total = await this.getTotalRows(filters);
     return { data: rows, total, offset, limit };
@@ -82,7 +94,7 @@ class ApiService {
 
   async getTableStructure() {
     const response = await fetch(`${API_BASE}/fields`);
-    if (!response.ok) throw new Error('Не удалось получить структуру');
+    if (!response.ok) throw new Error('Failed to get structure');
     const fields = await response.json();
     return fields.map((field: any) => ({
       key: field.name,
@@ -94,7 +106,7 @@ class ApiService {
 
   async getRecordById(id: number): Promise<Record<string, any>> {
     const response = await fetch(`${API_BASE}/sales/${id}`);
-    if (!response.ok) throw new Error(`Запись ${id} не найдена`);
+    if (!response.ok) throw new Error(`Record ${id} not found`);
     return await response.json();
   }
 
@@ -108,7 +120,7 @@ class ApiService {
     });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Ошибка обновления: ${response.status} – ${errorText}`);
+      throw new Error(`Update failed: ${response.status} – ${errorText}`);
     }
     return updatedRecord;
   }
@@ -119,7 +131,7 @@ class ApiService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(record),
     });
-    if (!response.ok) throw new Error(`Ошибка создания: ${response.status}`);
+    if (!response.ok) throw new Error(`Create failed: ${response.status}`);
     return await response.json();
   }
 
@@ -127,7 +139,7 @@ class ApiService {
     const response = await fetch(`${API_BASE}/sales/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error(`Ошибка удаления: ${response.status}`);
+    if (!response.ok) throw new Error(`Delete failed: ${response.status}`);
     return true;
   }
 
@@ -136,7 +148,7 @@ class ApiService {
   }
 
   async sendAIQuery(query: string, _context: any): Promise<string> {
-    return `(Заглушка) Ваш запрос: "${query}"`;
+    return `(Stub) Your query: "${query}"`;
   }
 
   async saveView(view: any) {

@@ -20,11 +20,15 @@ const FormulaBar: React.FC<FormulaBarProps> = ({
 
   useEffect(() => {
     setValue(initialValue);
-    if (inputRef.current) inputRef.current.focus();
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   }, [initialValue]);
 
   const handleSave = () => {
-    if (rowId !== null && column !== null) onSave(rowId, column, value);
+    if (rowId !== null && column !== null) {
+      onSave(rowId, column, value);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useDataQuery } from '@hooks';
 import { debounce } from '@utils';
 
 interface Column {
@@ -10,12 +9,13 @@ interface Column {
 
 interface FilterPanelProps {
   columns: Column[];
+  filters: Record<string, any>;
+  applyFilters: (newFilters: Record<string, any>) => void;
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({ columns }) => {
+const FilterPanel: React.FC<FilterPanelProps> = ({ columns, filters, applyFilters }) => {
   if (!columns || !Array.isArray(columns)) return null;
 
-  const { filters, applyFilters } = useDataQuery();
   const [localFilters, setLocalFilters] = useState<Record<string, any>>(filters);
 
   const debouncedApply = useCallback(
@@ -42,24 +42,33 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ columns }) => {
     applyFilters(localFilters);
   };
 
+  const getInputType = (type: string): string => {
+    if (type === 'date') return 'date';
+    if (type === 'numeric' || type === 'integer') return 'number';
+    return 'text';
+  };
+
   return (
     <div className="filter-panel">
       <div className="filter-row">
-        {columns.map(col => (
-          <div key={col.key} className="filter-field">
-            <label>{col.label || col.key}</label>
-            <input
-              type={col.type === 'date' ? 'date' : 'text'}
-              value={localFilters[col.key] || ''}
-              onChange={(e) => handleChange(col.key, e.target.value)}
-              placeholder={`Фильтр по ${col.label}`}
-            />
-          </div>
-        ))}
+        {columns.map(col => {
+          const inputType = getInputType(col.type);
+          return (
+            <div key={col.key} className="filter-field">
+              <label>{col.label || col.key}</label>
+              <input
+                type={inputType}
+                value={localFilters[col.key] || ''}
+                onChange={(e) => handleChange(col.key, e.target.value)}
+                placeholder={`Filter by ${col.label}`}
+              />
+            </div>
+          );
+        })}
       </div>
       <div className="filter-actions">
-        <button onClick={handleApplyNow}>Применить сейчас</button>
-        <button onClick={handleReset}>Сбросить</button>
+        <button onClick={handleApplyNow}>Apply now</button>
+        <button onClick={handleReset}>Reset</button>
       </div>
     </div>
   );

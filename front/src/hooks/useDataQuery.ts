@@ -5,12 +5,6 @@ export interface QueryFilters {
   [key: string]: any;
 }
 
-export interface Aggregation {
-  column: string;
-  type: string;
-  alias: string;
-}
-
 export interface Sort {
   column: string | null;
   direction: 'asc' | 'desc';
@@ -22,8 +16,6 @@ export const useDataQuery = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<QueryFilters>({});
-  const [groupBy, setGroupBy] = useState<string[]>([]);
-  const [aggregations, setAggregations] = useState<Aggregation[]>([]);
   const [sort, setSort] = useState<Sort>({ column: null, direction: 'asc' });
 
   const PAGE_SIZE = 10000;
@@ -40,12 +32,12 @@ export const useDataQuery = () => {
           offset,
           limit: PAGE_SIZE,
           filters,
-          groupBy,
-          aggregations,
           sort: sort.column ? { column: sort.column, direction: sort.direction } : undefined,
         },
         abortController.current.signal,
       );
+
+      console.log('Data received:', result.data.length, 'rows, total:', result.total);
 
       if (append) {
         setData(prev => {
@@ -63,7 +55,7 @@ export const useDataQuery = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters, groupBy, aggregations, sort]);
+  }, [filters, sort]);
 
   useEffect(() => {
     fetchChunk(0, false);
@@ -71,9 +63,10 @@ export const useDataQuery = () => {
   }, []);
 
   useEffect(() => {
+    console.log('Filters or sort changed, reloading data');
     setData([]);
     fetchChunk(0, false);
-  }, [filters, groupBy, aggregations, sort]);
+  }, [filters, sort]);
 
   const loadMoreRows = useCallback(async (_startIndex: number, _stopIndex: number) => {
     if (data.length >= totalRows) return;
@@ -81,14 +74,19 @@ export const useDataQuery = () => {
     await fetchChunk(nextOffset, true);
   }, [data.length, totalRows, fetchChunk]);
 
-  const applyFilters = useCallback((newFilters: QueryFilters) => setFilters(newFilters), []);
-  const applyGroupBy = useCallback((newGroupBy: string[]) => setGroupBy(newGroupBy), []);
-  const applyAggregations = useCallback((newAggregations: Aggregation[]) => setAggregations(newAggregations), []);
-  const applySort = useCallback((column: string, direction: 'asc' | 'desc') => setSort({ column, direction }), []);
+  const applyFilters = useCallback((newFilters: QueryFilters) => {
+    console.log('applyFilters called with:', newFilters);
+    setFilters(newFilters);
+  }, []);
+
+  const applySort = useCallback((column: string, direction: 'asc' | 'desc') => {
+    console.log('applySort called with:', column, direction);
+    setSort({ column, direction });
+  }, []);
 
   const updateRecord = useCallback(async (id: number, updates: Record<string, any>) => {
     const oldRow = data.find(r => r.id === id);
-    if (!oldRow) throw new Error('Запись не найдена');
+    if (!oldRow) throw new Error('Record not found');
     setData(prev => prev.map(row => (row.id === id ? { ...row, ...updates } : row)));
     try {
       const updated = await api.updateRecord(id, updates);
@@ -109,7 +107,7 @@ export const useDataQuery = () => {
 
   const deleteRecord = useCallback(async (id: number) => {
     const oldRow = data.find(r => r.id === id);
-    if (!oldRow) throw new Error('Запись не найдена');
+    if (!oldRow) throw new Error('Record not found');
     setData(prev => prev.filter(row => row.id !== id));
     setTotalRows(prev => prev - 1);
     try {
@@ -129,13 +127,9 @@ export const useDataQuery = () => {
     loading,
     error,
     filters,
-    groupBy,
-    aggregations,
     sort,
     hasMore,
     applyFilters,
-    applyGroupBy,
-    applyAggregations,
     applySort,
     loadMoreRows,
     updateRecord,

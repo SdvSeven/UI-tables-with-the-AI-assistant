@@ -1,7 +1,5 @@
 import React from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { InfiniteLoader } from 'react-window-infinite-loader';
-import { useDataQuery } from '@hooks';
 import { api } from '@services';
 
 interface Column {
@@ -13,15 +11,26 @@ interface Column {
 
 interface VirtualTableProps {
   columns: Column[];
+  data: any[];
+  loading: boolean;
+  sort: { column: string | null; direction: 'asc' | 'desc' };
+  applySort: (column: string, direction: 'asc' | 'desc') => void;
+  onCellSelect?: (rowId: number, column: string, value: string) => void;
   height?: number;
   rowHeight?: number;
-  onCellSelect?: (rowId: number, column: string, value: string) => void;
 }
 
-const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowHeight = 32, onCellSelect }) => {
+const VirtualTable: React.FC<VirtualTableProps> = ({
+  columns,
+  data,
+  loading,
+  sort,
+  applySort,
+  onCellSelect,
+  height = 500,
+  rowHeight = 32,
+}) => {
   if (!columns || !Array.isArray(columns)) return null;
-
-  const { data, hasMore, loading, sort, applySort, loadMoreRows } = useDataQuery();
 
   const [selectedCell, setSelectedCell] = React.useState<{
     rowId: number | null;
@@ -53,9 +62,7 @@ const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowH
     }
     const displayValue = formula !== null ? formula : (currentValue !== undefined ? String(currentValue) : '');
     setSelectedCell({ rowId, column, initialValue: displayValue });
-    if (onCellSelect) {
-      onCellSelect(rowId, column, displayValue);
-    }
+    if (onCellSelect) onCellSelect(rowId, column, displayValue);
   };
 
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
@@ -88,9 +95,6 @@ const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowH
     );
   };
 
-  const itemCount = hasMore ? data.length + 100 : data.length;
-  const isItemLoaded = (index: number) => !hasMore || index < data.length;
-
   return (
     <div className="virtual-table-container">
       <div className="virtual-table-header">
@@ -108,27 +112,15 @@ const VirtualTable: React.FC<VirtualTableProps> = ({ columns, height = 500, rowH
           </div>
         ))}
       </div>
-      {/* @ts-ignore */}
-      <InfiniteLoader
-        isItemLoaded={isItemLoaded}
-        itemCount={itemCount}
-        loadMoreItems={loadMoreRows}
-        threshold={50}
+      <List
+        height={height}
+        itemCount={data.length}
+        itemSize={rowHeight}
+        width="100%"
       >
-        {({ onItemsRendered, ref }) => (
-          <List
-            ref={ref}
-            height={height}
-            itemCount={itemCount}
-            itemSize={rowHeight}
-            onItemsRendered={onItemsRendered}
-            width="100%"
-          >
-            {Row}
-          </List>
-        )}
-      </InfiniteLoader>
-      {loading && <div className="loading-overlay">Загрузка...</div>}
+        {Row}
+      </List>
+      {loading && <div className="loading-overlay">Loading...</div>}
     </div>
   );
 };
