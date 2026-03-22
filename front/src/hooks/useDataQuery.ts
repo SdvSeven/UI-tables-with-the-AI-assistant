@@ -18,13 +18,36 @@ export const useDataQuery = () => {
   const [filters, setFilters] = useState<QueryFilters>({});
   const [sort, setSort] = useState<Sort>({ column: null, direction: 'asc' });
 
-  const PAGE_SIZE = 10000;
+  const PAGE_SIZE = 100;
+  const cache = useRef<Map<string, any[]>>(new Map());
   const abortController = useRef<AbortController | null>(null);
+  const isFetching = useRef(false);
 
-  const fetchChunk = useCallback(async (offset: number, append: boolean = true) => {
+  const reset = useCallback(() => {
+    setData([]);
+    setTotalRows(0);
+    cache.current.clear();
+  }, []);
+
+  const fetchPage = useCallback(async (page: number, append: boolean = true) => {
+    const offset = page * PAGE_SIZE;
+    const cacheKey = JSON.stringify({ filters, sort, offset, limit: PAGE_SIZE });
+
+    if (cache.current.has(cacheKey)) {
+      const cachedRows = cache.current.get(cacheKey)!;
+      if (append) {
+        setData(prev => [...prev, ...cachedRows]);
+      } else {
+        setData(cachedRows);
+      }
+      return;
+    }
+
+    if (isFetching.current) return;
     if (abortController.current) abortController.current.abort();
     abortController.current = new AbortController();
 
+    isFetching.current = true;
     setLoading(true);
     try {
       const result = await api.query(
@@ -37,14 +60,10 @@ export const useDataQuery = () => {
         abortController.current.signal,
       );
 
-      console.log('Data received:', result.data.length, 'rows, total:', result.total);
+      cache.current.set(cacheKey, result.data);
 
       if (append) {
-        setData(prev => {
-          const existingIds = new Set(prev.map((r: any) => r.id));
-          const newRows = result.data.filter((r: any) => !existingIds.has(r.id));
-          return [...prev, ...newRows];
-        });
+        setData(prev => [...prev, ...result.data]);
       } else {
         setData(result.data);
       }
@@ -54,33 +73,34 @@ export const useDataQuery = () => {
       if (err.name !== 'AbortError') setError(err.message);
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
   }, [filters, sort]);
 
   useEffect(() => {
-    fetchChunk(0, false);
+    reset();
+    const loadFirstPage = async () => {
+      const total = await api.getTotalRows(filters);
+      setTotalRows(total);
+      await fetchPage(0, false);
+    };
+    loadFirstPage();
     return () => abortController.current?.abort();
-  }, []);
-
-  useEffect(() => {
-    console.log('Filters or sort changed, reloading data');
-    setData([]);
-    fetchChunk(0, false);
   }, [filters, sort]);
 
-  const loadMoreRows = useCallback(async (_startIndex: number, _stopIndex: number) => {
-    if (data.length >= totalRows) return;
-    const nextOffset = data.length;
-    await fetchChunk(nextOffset, true);
-  }, [data.length, totalRows, fetchChunk]);
+  const loadMore = useCallback(async () => {
+    if (loading || isFetching.current) return;
+    const currentLength = data.length;
+    if (currentLength >= totalRows) return;
+    const nextPage = Math.floor(currentLength / PAGE_SIZE);
+    await fetchPage(nextPage, true);
+  }, [data.length, totalRows, loading, fetchPage, PAGE_SIZE]);
 
   const applyFilters = useCallback((newFilters: QueryFilters) => {
-    console.log('applyFilters called with:', newFilters);
     setFilters(newFilters);
   }, []);
 
   const applySort = useCallback((column: string, direction: 'asc' | 'desc') => {
-    console.log('applySort called with:', column, direction);
     setSort({ column, direction });
   }, []);
 
@@ -131,7 +151,7 @@ export const useDataQuery = () => {
     hasMore,
     applyFilters,
     applySort,
-    loadMoreRows,
+    loadMore,
     updateRecord,
     createRecord,
     deleteRecord,

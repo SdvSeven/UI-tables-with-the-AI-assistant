@@ -23,7 +23,18 @@ const App: React.FC = () => {
     value: string;
   }>({ rowId: null, column: null, value: '' });
 
-  const { data, loading, sort, filters, applyFilters, applySort, updateRecord } = useDataQuery();
+  const {
+    data,
+    totalRows,
+    loading,
+    sort,
+    filters,
+    hasMore,
+    applyFilters,
+    applySort,
+    loadMore,
+    updateRecord,
+  } = useDataQuery();
 
   useEffect(() => {
     api.getTableStructure()
@@ -96,8 +107,11 @@ const App: React.FC = () => {
               loading={loading}
               sort={sort}
               applySort={applySort}
+              loadMore={loadMore}
+              hasMore={hasMore}
               onCellSelect={handleCellSelect}
               height={600}
+              overscanCount={5}
             />
           </div>
           {showAIPanel && (

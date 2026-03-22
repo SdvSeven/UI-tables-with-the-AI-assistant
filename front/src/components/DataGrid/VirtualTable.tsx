@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { api } from '@services';
 
@@ -15,9 +15,12 @@ interface VirtualTableProps {
   loading: boolean;
   sort: { column: string | null; direction: 'asc' | 'desc' };
   applySort: (column: string, direction: 'asc' | 'desc') => void;
+  loadMore: () => void;
+  hasMore: boolean;
   onCellSelect?: (rowId: number, column: string, value: string) => void;
   height?: number;
   rowHeight?: number;
+  overscanCount?: number;
 }
 
 const VirtualTable: React.FC<VirtualTableProps> = ({
@@ -26,13 +29,16 @@ const VirtualTable: React.FC<VirtualTableProps> = ({
   loading,
   sort,
   applySort,
+  loadMore,
+  hasMore,
   onCellSelect,
   height = 500,
   rowHeight = 32,
+  overscanCount = 5,
 }) => {
   if (!columns || !Array.isArray(columns)) return null;
 
-  const [selectedCell, setSelectedCell] = React.useState<{
+  const [selectedCell, setSelectedCell] = useState<{
     rowId: number | null;
     column: string | null;
     initialValue: string;
@@ -95,6 +101,37 @@ const VirtualTable: React.FC<VirtualTableProps> = ({
     );
   };
 
+  const LoadingRow = ({ style }: { style: React.CSSProperties }) => (
+    <div style={style} className="virtual-row loading-row">
+      <div style={{ width: '100%', textAlign: 'center', padding: '8px', color: '#5f6368' }}>
+        Loading...
+      </div>
+    </div>
+  );
+
+  const RowRenderer = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    if (index < data.length) {
+      return <Row index={index} style={style} />;
+    } else {
+      return <LoadingRow style={style} />;
+    }
+  };
+
+  const itemCount = hasMore ? data.length + 1 : data.length;
+
+  const handleItemsRendered = ({
+    visibleStopIndex,
+  }: {
+    visibleStopIndex: number;
+    overscanStopIndex?: number;
+  }) => {
+    // Если мы приблизились к концу загруженных данных (осталось меньше 15 строк до конца)
+    // и есть ещё данные для загрузки, и не идёт активная загрузка, то загружаем следующую страницу.
+    if (hasMore && !loading && visibleStopIndex >= data.length - 15) {
+      loadMore();
+    }
+  };
+
   return (
     <div className="virtual-table-container">
       <div className="virtual-table-header">
@@ -114,11 +151,13 @@ const VirtualTable: React.FC<VirtualTableProps> = ({
       </div>
       <List
         height={height}
-        itemCount={data.length}
+        itemCount={itemCount}
         itemSize={rowHeight}
+        overscanCount={overscanCount}
+        onItemsRendered={handleItemsRendered}
         width="100%"
       >
-        {Row}
+        {RowRenderer}
       </List>
       {loading && <div className="loading-overlay">Loading...</div>}
     </div>
