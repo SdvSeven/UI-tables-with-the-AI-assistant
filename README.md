@@ -16,33 +16,42 @@
 
 1. Установите PostgreSQL (например, через Homebrew):
    brew install postgresql@16
+   
    brew services start postgresql@16
 
-2. Создайте базу данных и выполните скрипты инициализации:
+3. Создайте базу данных и выполните скрипты инициализации:
    createdb pivot_analytics
+   
    psql -U <your_user> -d pivot_analytics -f db_scripts/01_create_tables.sql
+   
    psql -U <your_user> -d pivot_analytics -f db_scripts/02_create_indexes.sql
 
-3. Для наполнения тестовыми данными (100 000 строк) выполните:
+5. Для наполнения тестовыми данными (100 000 строк) выполните:
    psql -U <your_user> -d pivot_analytics -f db_scripts/03_generate_data.sql
 
 ### Основной бэкенд (Spring Boot)
    cd back/pivot-demo
+   
    mvn spring-boot:run
 
 Сервер запустится на порту 8080.
 
 ### AI‑модуль (прокси для LLM)
    cd back/ml/Danil-Backend/java-backend
+   
    export MISTRAL_API_KEY="ваш_ключ"
+   
    export MISTRAL_MODEL="mistral-tiny"
+   
    mvn spring-boot:run
 
 Сервер запустится на порту 8082.
 
 ### Фронтенд
    cd front
+   
    npm install
+   
    npm run dev
 
 Приложение будет доступно по адресу http://localhost:5173.
