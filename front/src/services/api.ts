@@ -135,9 +135,31 @@ class ApiService {
     return null;
   }
 
-  async sendAIQuery(query: string, _context: any): Promise<string> {
-    return `(Заглушка) Ваш запрос: "${query}"`;
+  async sendAIQuery(query: string, context: any): Promise<string> {
+  try {
+    const response = await fetch(`${API_BASE}/ai/suggest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: query }),
+    });
+    if (!response.ok) throw new Error('AI request failed');
+    const data = await response.json();
+    return data.insight || 'Нет ответа от AI';
+  } catch (err) {
+    console.error('AI error:', err);
+    return 'Ошибка при обращении к AI.';
   }
+}
+  
+  async sendNaturalLanguageQuery(question: string): Promise<any> {
+  const response = await fetch(`${API_BASE}/ai/nl-query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table: 'sales', question, explain: false }),
+  });
+  if (!response.ok) throw new Error('AI query failed');
+  return response.json();
+}
 
   async saveView(view: any) {
     const views = JSON.parse(localStorage.getItem('saved_views') || '[]');

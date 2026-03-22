@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { VirtualTable, FilterPanel, AggregationBar, ViewManager, AIPanel, FormulaBar } from '@components';
+import { VirtualTable, FilterPanel, AggregationBar, ViewManager, FormulaBar } from '@components';
+import AIQueryPanel from './components/AI/AIQueryPanel'; // импортируем новую панель
 import { api } from '@services';
 import '@styles';
 
@@ -101,7 +102,7 @@ const App: React.FC = () => {
           </div>
           {showAIPanel && (
             <div className="ai-sidebar" style={{ width: '350px', flexShrink: 0 }}>
-              <AIPanel />
+              <AIQueryPanel />  {/* вместо старого AIPanel */}
             </div>
           )}
         </div>

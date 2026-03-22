@@ -1,0 +1,17 @@
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/AnalyticAppApplication.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/config/AppConfig.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/config/CorsConfig.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/controller/AnalyticsController.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/controller/InsightsController.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/controller/OrchestratorController.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/AggregationSpec.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/FilterSpec.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/QueryRequest.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/QueryResponse.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/repository/AnalyticsRepository.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/AnalyticsService.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/MistralService.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/OrchestratorService.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/QueryService.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/SyntheticDataService.java
+/Users/skyperfect/Desktop/456/CheatCoders/back/ml/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/startup/DatabaseHealthCheck.java

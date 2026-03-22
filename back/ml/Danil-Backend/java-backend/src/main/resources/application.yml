@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pivot_analytics
+    username: skyperfect
+    password: ""
+    driver-class-name: org.postgresql.Driver
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+
+server:
+  port: 8082
+
+logging:
+  level:
+    root: INFO
+    ai.cheatcoders: DEBUG
