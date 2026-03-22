@@ -14,6 +14,7 @@ const AIPanel: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lastResp, setLastResp] = useState<any | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -37,9 +38,14 @@ const AIPanel: React.FC = () => {
     setLoading(true);
     try {
       const response = await api.sendAIQuery(input, { filters, groupBy, dataSample: data.slice(0, 100) });
+      // api.sendAIQuery returns stringified JSON of backend response
+      let parsed: any = null;
+      try { parsed = JSON.parse(response); } catch (e) { parsed = null; }
+      setLastResp(parsed);
+      const displayText = parsed && parsed.display ? parsed.display : (parsed && parsed.status ? parsed.status : String(response));
       const aiMsg: Message = {
         id: Date.now() + 1,
-        text: response,
+        text: displayText,
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -78,6 +84,49 @@ const AIPanel: React.FC = () => {
         ))}
         {loading && <div className="typing-indicator">AI печатает...</div>}
         <div ref={messagesEndRef} />
+      </div>
+      {/* DISPLAY / TABLE / DEBUG zones */}
+      <div style={{ borderTop: '1px solid #eee', marginTop: '8px', paddingTop: '8px' }}>
+        <h4>DISPLAY</h4>
+        <pre style={{ whiteSpace: 'pre-wrap', background: '#fafafa', padding: '8px' }}>{lastResp ? lastResp.display : ''}</pre>
+
+        <h4>TABLE (data)</h4>
+        <div style={{ maxHeight: 200, overflow: 'auto', border: '1px solid #ddd' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th>id</th>
+                <th>sale_date</th>
+                <th>region</th>
+                <th>product_category</th>
+                <th>product_name</th>
+                <th>quantity</th>
+                <th>price</th>
+                <th>revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(lastResp && Array.isArray(lastResp.data) ? lastResp.data : []).slice(0, 100).map((row: any, i: number) => (
+                <tr key={i} style={{ borderTop: '1px solid #eee' }}>
+                  <td>{row.id}</td>
+                  <td>{row.sale_date}</td>
+                  <td>{row.region}</td>
+                  <td>{row.product_category}</td>
+                  <td>{row.product_name}</td>
+                  <td>{row.quantity}</td>
+                  <td>{row.price}</td>
+                  <td>{row.revenue}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h4 style={{ marginTop: 8 }}>DEBUG</h4>
+        <div style={{ fontSize: 12, color: '#666' }}>
+          <div><strong>SQL:</strong> <code>{lastResp ? lastResp.sql : ''}</code></div>
+          <div><strong>row_count:</strong> {lastResp ? String(lastResp.row_count) : ''}</div>
+        </div>
       </div>
       <div className="ai-input-area">
         <textarea

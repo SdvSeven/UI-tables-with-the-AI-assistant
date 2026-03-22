@@ -136,7 +136,22 @@ class ApiService {
   }
 
   async sendAIQuery(query: string, _context: any): Promise<string> {
-    return `(Заглушка) Ваш запрос: "${query}"`;
+    // Forward natural language query to backend orchestrator
+    try {
+      const res = await fetch('http://localhost:8080/api/v1/orchestrator/nl-query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'sales', question: query, explain: false }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Backend error: ${res.status} ${text}`);
+      }
+      const j = await res.json();
+      return JSON.stringify(j);
+    } catch (e: any) {
+      throw e;
+    }
   }
 
   async saveView(view: any) {
