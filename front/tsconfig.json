@@ -24,7 +24,12 @@
       "@store/*": ["src/store/*"],
       "@utils/*": ["src/utils/*"],
       "@config/*": ["src/config/*"],
-      "@styles/*": ["src/styles/*"]
+      "@styles/*": ["src/styles/*"],
+      "@components": ["src/components"],
+      "@hooks": ["src/hooks"],
+      "@services": ["src/services"],
+      "@utils": ["src/utils"],
+      "@styles": ["src/styles"]
     }
   },
   "include": ["src"],

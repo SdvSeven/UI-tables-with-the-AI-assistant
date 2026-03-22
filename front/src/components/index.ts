@@ -3,7 +3,7 @@ export { default as VirtualTable } from './DataGrid/VirtualTable';
 export { default as ColumnSelector } from './DataGrid/ColumnSelector';
 export { default as FilterPanel } from './DataGrid/FilterPanel';
 export { default as AggregationBar } from './DataGrid/AggregationBar';
-export { default as FormulaBar } from './DataGrid/FormulaBar'; // добавлен
+export { default as FormulaBar } from './DataGrid/FormulaBar';
 // Analysis
 export { default as PivotTable } from './Analysis/PivotTable';
 export { default as ChartViewer } from './Analysis/ChartViewer';

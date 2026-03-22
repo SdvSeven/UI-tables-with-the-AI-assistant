@@ -4,7 +4,8 @@ import { useDataQuery } from '@hooks';
 
 const ViewManager: React.FC = () => {
     const [views, setViews] = useState<any[]>([]);
-    const [showSave, setShowSave] = useState(false);
+    const [showSaveDialog, setShowSaveDialog] = useState(false);
+    const [showViewsList, setShowViewsList] = useState(false);
     const [viewName, setViewName] = useState('');
     const { filters, groupBy, aggregations, sort, applyFilters, applyGroupBy, applyAggregations, applySort } = useDataQuery();
 
@@ -30,8 +31,9 @@ const ViewManager: React.FC = () => {
         };
         await api.saveView(newView);
         await loadViews();
-        setShowSave(false);
+        setShowSaveDialog(false);
         setViewName('');
+        setShowViewsList(false);
     };
 
     const loadView = (view: any) => {
@@ -39,6 +41,7 @@ const ViewManager: React.FC = () => {
         applyGroupBy(view.groupBy);
         applyAggregations(view.aggregations);
         if (view.sort) applySort(view.sort.column, view.sort.direction);
+        setShowViewsList(false);
     };
 
     const deleteView = async (id: number) => {
@@ -46,10 +49,28 @@ const ViewManager: React.FC = () => {
         await loadViews();
     };
 
+    const toggleViewsList = () => {
+        setShowViewsList(!showViewsList);
+        setShowSaveDialog(false);
+    };
+
+    const openSaveDialog = () => {
+        setShowSaveDialog(true);
+        setShowViewsList(false);
+    };
+
     return (
         <div className="view-manager">
-            <button onClick={() => setShowSave(true)}>Сохранить срез</button>
-            {showSave && (
+            <div className="view-manager-buttons">
+                <button className="view-manager-button" onClick={openSaveDialog}>
+                    Сохранить срез
+                </button>
+                <button className="view-manager-button" onClick={toggleViewsList}>
+                    Мои срезы
+                </button>
+            </div>
+
+            {showSaveDialog && (
                 <div className="save-dialog">
                     <input
                         type="text"
@@ -58,25 +79,28 @@ const ViewManager: React.FC = () => {
                         onChange={(e) => setViewName(e.target.value)}
                     />
                     <button onClick={saveCurrentView}>Сохранить</button>
-                    <button onClick={() => setShowSave(false)}>Отмена</button>
+                    <button onClick={() => setShowSaveDialog(false)}>Отмена</button>
                 </div>
             )}
-            <div className="views-list">
-                <h4>Сохранённые срезы</h4>
-                {views.length === 0 ? (
-                    <p>Нет сохранённых срезов</p>
-                ) : (
-                    views.map(view => (
-                        <div key={view.id} className="view-item">
-                            <span>{view.name}</span>
-                            <div>
-                                <button onClick={() => loadView(view)}>Загрузить</button>
-                                <button onClick={() => deleteView(view.id)}>Удалить</button>
+
+            {showViewsList && (
+                <div className="views-list">
+                    <h4>Сохранённые срезы</h4>
+                    {views.length === 0 ? (
+                        <p>Нет сохранённых срезов</p>
+                    ) : (
+                        views.map(view => (
+                            <div key={view.id} className="view-item">
+                                <span>{view.name}</span>
+                                <div>
+                                    <button onClick={() => loadView(view)}>Загрузить</button>
+                                    <button onClick={() => deleteView(view.id)}>Удалить</button>
+                                </div>
                             </div>
-                        </div>
-                    ))
-                )}
-            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     );
 };
