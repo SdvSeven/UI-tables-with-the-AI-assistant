@@ -1,0 +1,16 @@
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/AnalyticAppApplication.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/config/AppConfig.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/controller/AnalyticsController.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/controller/InsightsController.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/controller/OrchestratorController.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/AggregationSpec.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/FilterSpec.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/QueryRequest.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/dto/QueryResponse.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/repository/AnalyticsRepository.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/AnalyticsService.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/MistralService.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/OrchestratorService.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/QueryService.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/service/SyntheticDataService.java
+/Users/sdv7/Documents/CheatCoders/Danil-Backend/java-backend/src/main/java/ai/cheatcoders/analytic/startup/DatabaseHealthCheck.java

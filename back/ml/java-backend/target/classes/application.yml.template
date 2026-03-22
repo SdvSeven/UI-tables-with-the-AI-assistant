@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/analytics_db
+    username: postgres
+    password: secret
+    driver-class-name: org.postgresql.Driver
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+
+server:
+  port: 8080
+
+# Mistral credentials are read from environment variables MISTRAL_API_KEY and MISTRAL_MODEL
