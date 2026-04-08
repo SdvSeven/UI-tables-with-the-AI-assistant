@@ -8,61 +8,100 @@
   <b>🟢 Хакатон Сбер & ПРОСТО & ИТМО </b>
 </p>
 
-Веб‑приложение для бизнес‑аналитиков, позволяющее создавать сводные таблицы на больших объёмах данных (10 млн записей, до 200 атрибутов) с использованием ИИ для рекомендаций и интерпретации данных.
+---
 
-Чтобы развернуть сервер, обратись к нам, мы предоставим вам свой сервер и устройство 🤗
+## О проекте
+
+Веб-приложение для бизнес-аналитиков, позволяющее создавать сводные таблицы на больших объёмах данных (до **10 млн записей** и **200 атрибутов**) с использованием AI для рекомендаций и интерпретации данных.
+
+---
+
+## Возможности
+
+- Построение pivot-таблиц на больших данных  
+- Работа с высоконагруженными наборами данных  
+- AI-подсказки для анализа и интерпретации  
+- Масштабируемая архитектура  
+- Разделение backend / AI / frontend  
+
+---
 
 ## Стек технологий
 
-- **База данных**: PostgreSQL 16
-- **Бэкенд**: Java 17+, Spring Boot 3
-- **Фронтенд**: React + TypeScript
-- **AI‑модуль**: Spring Boot (прокси) + Mistral (LLM)
+- **База данных:** PostgreSQL 16  
+- **Backend:** Java 17+, Spring Boot 3  
+- **Frontend:** React + TypeScript  
+- **AI-модуль:** Spring Boot (proxy) + Mistral LLM  
 
-Запуск:
+---
 
-### База данных (PostgreSQL)
+## Запуск проекта
 
-1. Установите PostgreSQL (например, через Homebrew):
-   brew install postgresql@16
-   
-   brew services start postgresql@16
+### 1. База данных (PostgreSQL)
 
-3. Создайте базу данных и выполните скрипты инициализации:
-   createdb pivot_analytics
-   
-   psql -U <your_user> -d pivot_analytics -f db_scripts/01_create_tables.sql
-   
-   psql -U <your_user> -d pivot_analytics -f db_scripts/02_create_indexes.sql
+##### Установка:
 
-5. Для наполнения тестовыми данными (100 000 строк) выполните:
-   psql -U <your_user> -d pivot_analytics -f db_scripts/03_generate_data.sql
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+```
 
-### Основной бэкенд (Spring Boot)
-   cd back/pivot-demo
-   
-   mvn spring-boot:run
+##### Создание базы:
+```bash
+createdb pivot_analytics
+```
 
-Сервер запустится на порту 8080.
+##### Инициализация схемы:
+```bash
+psql -U <your_user> -d pivot_analytics -f db_scripts/01_create_tables.sql
+psql -U <your_user> -d pivot_analytics -f db_scripts/02_create_indexes.sql
+```
 
-### AI‑модуль (прокси для LLM)
-   cd back/ml/Danil-Backend/java-backend
-   
-   export MISTRAL_API_KEY="ваш_ключ"
-   
-   export MISTRAL_MODEL="mistral-tiny"
-   
-   mvn spring-boot:run
+##### Заполнение тестовыми данными:
+```bash
+psql -U <your_user> -d pivot_analytics -f db_scripts/03_generate_data.sql
+```
 
-Сервер запустится на порту 8082.
+### 2. Основной backend (Spring Boot)
+```bash
+cd back/pivot-demo
+mvn spring-boot:run
+```
+##### Сервис будет доступен на: http://localhost:8080
 
-### Фронтенд
-   cd front
-   
-   npm install
-   
-   npm run dev
+### 3. AI-модуль (LLM proxy)
+```bash
+cd back/ml/Danil-Backend/java-backend
 
-Приложение будет доступно по адресу http://localhost:5173.
+export MISTRAL_API_KEY="ваш_ключ"
+export MISTRAL_MODEL="mistral-tiny"
 
+mvn spring-boot:run
+```
+
+##### Сервис будет доступен на: http://localhost:8082
+
+### 4. Frontend
+```bash
+cd front
+npm install
+npm run dev
+```
+
+##### Приложение:http://localhost:5173
+
+### Архитектура
+Frontend (React + TypeScript)
+Backend API (Spring Boot)
+AI Proxy Service (Spring Boot)
+PostgreSQL (основное хранилище)
+LLM (Mistral)
+
+
+## Команда
 Разработано в рамках хакатона командой CheatCoders.
+- Капитан команды, LLM + Backend : @SdvSeven (Tg)
+- Backend + Data : @skyperfect (Tg)
+- Frontend : @ORLIK1121 (Tg)
+- Math: @Stefek2435 (Tg)
+
