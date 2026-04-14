@@ -102,6 +102,6 @@ LLM (Mistral)
 Разработано в рамках хакатона командой CheatCoders.
 - Капитан команды, LLM + Backend : @SdvSeven (Tg)
 - Backend + Data : @skyperfect (Tg)
-- Frontend : @ORLIK1121 (Tg)
+- Frontend : @ORLIK1121 (Tg) 
 - Math: @Stefek2435 (Tg) 
 
